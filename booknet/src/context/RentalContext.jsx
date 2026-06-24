@@ -22,13 +22,24 @@ export function RentalProvider({ children }) {
     );
   }
 
+  function updateRental(updatedRental) {
+  setRentals((prev) =>
+    prev.map((rental) =>
+      rental.id === updatedRental.id
+        ? updatedRental
+        : rental
+    )
+  );
+}
+
   return (
     <RentalContext.Provider
       value={{
         rentals,
         addRental,
         removeRental,
-      }}
+        updateRental,
+}}
     >
       {children}
     </RentalContext.Provider>

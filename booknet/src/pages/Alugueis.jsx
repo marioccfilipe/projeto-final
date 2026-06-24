@@ -5,17 +5,39 @@ import { ClientContext } from "../context/ClientContext";
 import { RentalContext } from "../context/RentalContext";
 
 export default function Alugueis() {
-  const { books, updateBook } =
-    useContext(BookContext);
+  const { books, updateBook } = useContext(BookContext);
 
-  const { clients } =
-    useContext(ClientContext);
+  const { clients } = useContext(ClientContext);
 
-  const { rentals, addRental } =
-    useContext(RentalContext);
+  const {
+    rentals,
+    addRental,
+    updateRental,
+  } = useContext(RentalContext);
 
   const [clienteId, setClienteId] = useState("");
   const [livroId, setLivroId] = useState("");
+
+  function devolverLivro(rental) {
+    const livro = books.find(
+      (book) => book.id === rental.livroId
+    );
+
+    if (!livro) return;
+
+    updateRental({
+      ...rental,
+      status: "DEVOLVIDO",
+    });
+
+    updateBook({
+      ...livro,
+      quantidade:
+        Number(livro.quantidade) + 1,
+    });
+
+    alert("Livro devolvido.");
+  }
 
   function realizarAluguel() {
     const cliente = clients.find(
@@ -31,12 +53,11 @@ export default function Alugueis() {
       return;
     }
 
-    const alugueisCliente =
-      rentals.filter(
-        (r) =>
-          r.clienteId === cliente.id &&
-          r.status === "ATIVO"
-      );
+    const alugueisCliente = rentals.filter(
+      (r) =>
+        r.clienteId === cliente.id &&
+        r.status === "ATIVO"
+    );
 
     if (alugueisCliente.length >= 3) {
       alert(
@@ -45,7 +66,7 @@ export default function Alugueis() {
       return;
     }
 
-    if (livro.quantidade <= 0) {
+    if (Number(livro.quantidade) <= 0) {
       alert("Livro sem estoque.");
       return;
     }
@@ -91,13 +112,11 @@ export default function Alugueis() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-
       <h1 className="text-3xl font-bold mb-6">
         Aluguéis
       </h1>
 
       <div className="bg-white p-6 rounded-xl shadow mb-6">
-
         <div className="grid md:grid-cols-2 gap-4">
 
           <select
@@ -150,11 +169,9 @@ export default function Alugueis() {
         >
           Alugar Livro
         </button>
-
       </div>
 
       <div className="grid gap-4">
-
         {rentals.map((rental) => (
           <div
             key={rental.id}
@@ -165,21 +182,30 @@ export default function Alugueis() {
             </h2>
 
             <p>
-              Cliente:
-              {" "}
-              {rental.clienteNome}
+              Cliente: {rental.clienteNome}
             </p>
 
             <p>
-              Devolução:
-              {" "}
-              {rental.dataDevolucao}
+              Devolução: {rental.dataDevolucao}
             </p>
+
+            <p>
+              Status: {rental.status}
+            </p>
+
+            {rental.status === "ATIVO" && (
+              <button
+                onClick={() =>
+                  devolverLivro(rental)
+                }
+                className="bg-green-600 text-white px-3 py-1 rounded mt-3"
+              >
+                Devolver
+              </button>
+            )}
           </div>
         ))}
-
       </div>
-
     </div>
   );
 }
