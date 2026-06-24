@@ -8,14 +8,35 @@ export default function Alugueis() {
   const { books, updateBook } = useContext(BookContext);
   const { clients } = useContext(ClientContext);
 
-  const {
-    rentals,
-    addRental,
-    updateRental,
-  } = useContext(RentalContext);
+  const { rentals, addRental, updateRental } =
+    useContext(RentalContext);
 
   const [clienteId, setClienteId] = useState("");
   const [livroId, setLivroId] = useState("");
+
+  function converterData(dataBR) {
+    const partes = dataBR.split("/");
+
+    return new Date(
+      Number(partes[2]),
+      Number(partes[1]) - 1,
+      Number(partes[0])
+    );
+  }
+
+  function calcularMulta(dataDevolucao) {
+    const hoje = new Date();
+    const devolucao = converterData(dataDevolucao);
+
+    const diferenca = hoje - devolucao;
+    const diasAtraso = Math.floor(
+      diferenca / (1000 * 60 * 60 * 24)
+    );
+
+    if (diasAtraso <= 0) return 0;
+
+    return diasAtraso * 2;
+  }
 
   function devolverLivro(rental) {
     const livro = books.find(
@@ -24,9 +45,12 @@ export default function Alugueis() {
 
     if (!livro) return;
 
+    const multa = calcularMulta(rental.dataDevolucao);
+
     updateRental({
       ...rental,
       status: "DEVOLVIDO",
+      multa,
     });
 
     updateBook({
@@ -34,17 +58,17 @@ export default function Alugueis() {
       quantidade: Number(livro.quantidade) + 1,
     });
 
-    alert("Livro devolvido.");
+    if (multa > 0) {
+      alert(`Livro devolvido com multa de R$ ${multa},00`);
+    } else {
+      alert("Livro devolvido sem multa.");
+    }
   }
 
   function renovarLivro(rental) {
-    const partes = rental.dataDevolucao.split("/");
+    const multa = calcularMulta(rental.dataDevolucao);
 
-    const novaData = new Date(
-      Number(partes[2]),
-      Number(partes[1]) - 1,
-      Number(partes[0])
-    );
+    const novaData = converterData(rental.dataDevolucao);
 
     novaData.setDate(novaData.getDate() + 14);
 
@@ -52,9 +76,14 @@ export default function Alugueis() {
       ...rental,
       renovacoes: Number(rental.renovacoes) + 1,
       dataDevolucao: novaData.toLocaleDateString(),
+      multa,
     });
 
-    alert("Aluguel renovado.");
+    if (multa > 0) {
+      alert(`Aluguel renovado com multa de R$ ${multa},00`);
+    } else {
+      alert("Aluguel renovado.");
+    }
   }
 
   function realizarAluguel() {
@@ -100,6 +129,7 @@ export default function Alugueis() {
       dataDevolucao: devolucao.toLocaleDateString(),
 
       renovacoes: 0,
+      multa: 0,
       status: "ATIVO",
     });
 
@@ -143,7 +173,7 @@ export default function Alugueis() {
 
             {books.map((book) => (
               <option key={book.id} value={book.id}>
-                {book.nome}
+                {book.nome} — Estoque: {book.quantidade}
               </option>
             ))}
           </select>
@@ -158,39 +188,47 @@ export default function Alugueis() {
       </div>
 
       <div className="grid gap-4">
-        {rentals.map((rental) => (
-          <div
-            key={rental.id}
-            className="bg-white shadow rounded-xl p-4"
-          >
-            <h2 className="font-bold">
-              {rental.livroNome}
-            </h2>
+        {rentals.map((rental) => {
+          const multaAtual =
+            rental.status === "ATIVO"
+              ? calcularMulta(rental.dataDevolucao)
+              : rental.multa || 0;
 
-            <p>Cliente: {rental.clienteNome}</p>
-            <p>Devolução: {rental.dataDevolucao}</p>
-            <p>Status: {rental.status}</p>
-            <p>Renovações: {rental.renovacoes}</p>
+          return (
+            <div
+              key={rental.id}
+              className="bg-white shadow rounded-xl p-4"
+            >
+              <h2 className="font-bold">
+                {rental.livroNome}
+              </h2>
 
-            {rental.status === "ATIVO" && (
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => devolverLivro(rental)}
-                  className="bg-green-600 text-white px-3 py-1 rounded"
-                >
-                  Devolver
-                </button>
+              <p>Cliente: {rental.clienteNome}</p>
+              <p>Devolução: {rental.dataDevolucao}</p>
+              <p>Status: {rental.status}</p>
+              <p>Renovações: {rental.renovacoes}</p>
+              <p>Multa: R$ {multaAtual},00</p>
 
-                <button
-                  onClick={() => renovarLivro(rental)}
-                  className="bg-blue-600 text-white px-3 py-1 rounded"
-                >
-                  Renovar
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+              {rental.status === "ATIVO" && (
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => devolverLivro(rental)}
+                    className="bg-green-600 text-white px-3 py-1 rounded"
+                  >
+                    Devolver
+                  </button>
+
+                  <button
+                    onClick={() => renovarLivro(rental)}
+                    className="bg-blue-600 text-white px-3 py-1 rounded"
+                  >
+                    Renovar
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
