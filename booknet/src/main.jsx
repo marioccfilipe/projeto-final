@@ -5,11 +5,14 @@ import App from "./App";
 import "./index.css";
 
 import { BookProvider } from "./context/BookContext";
+import { ClientProvider } from "./context/ClientContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BookProvider>
-      <App />
+      <ClientProvider>
+        <App />
+      </ClientProvider>
     </BookProvider>
   </React.StrictMode>
 );
