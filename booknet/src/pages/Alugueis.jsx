@@ -6,7 +6,6 @@ import { RentalContext } from "../context/RentalContext";
 
 export default function Alugueis() {
   const { books, updateBook } = useContext(BookContext);
-
   const { clients } = useContext(ClientContext);
 
   const {
@@ -32,21 +31,35 @@ export default function Alugueis() {
 
     updateBook({
       ...livro,
-      quantidade:
-        Number(livro.quantidade) + 1,
+      quantidade: Number(livro.quantidade) + 1,
     });
 
     alert("Livro devolvido.");
   }
 
-  function realizarAluguel() {
-    const cliente = clients.find(
-      (c) => c.id === clienteId
+  function renovarLivro(rental) {
+    const partes = rental.dataDevolucao.split("/");
+
+    const novaData = new Date(
+      Number(partes[2]),
+      Number(partes[1]) - 1,
+      Number(partes[0])
     );
 
-    const livro = books.find(
-      (b) => b.id === livroId
-    );
+    novaData.setDate(novaData.getDate() + 14);
+
+    updateRental({
+      ...rental,
+      renovacoes: Number(rental.renovacoes) + 1,
+      dataDevolucao: novaData.toLocaleDateString(),
+    });
+
+    alert("Aluguel renovado.");
+  }
+
+  function realizarAluguel() {
+    const cliente = clients.find((c) => c.id === clienteId);
+    const livro = books.find((b) => b.id === livroId);
 
     if (!cliente || !livro) {
       alert("Selecione cliente e livro.");
@@ -60,9 +73,7 @@ export default function Alugueis() {
     );
 
     if (alugueisCliente.length >= 3) {
-      alert(
-        "Cliente já possui 3 livros alugados."
-      );
+      alert("Cliente já possui 3 livros alugados.");
       return;
     }
 
@@ -72,12 +83,9 @@ export default function Alugueis() {
     }
 
     const hoje = new Date();
-
     const devolucao = new Date();
 
-    devolucao.setDate(
-      devolucao.getDate() + 14
-    );
+    devolucao.setDate(devolucao.getDate() + 14);
 
     addRental({
       id: crypto.randomUUID(),
@@ -88,23 +96,17 @@ export default function Alugueis() {
       livroId: livro.id,
       livroNome: livro.nome,
 
-      dataAluguel:
-        hoje.toLocaleDateString(),
-
-      dataDevolucao:
-        devolucao.toLocaleDateString(),
+      dataAluguel: hoje.toLocaleDateString(),
+      dataDevolucao: devolucao.toLocaleDateString(),
 
       renovacoes: 0,
-
       status: "ATIVO",
     });
 
     updateBook({
       ...livro,
-      quantidade:
-        Number(livro.quantidade) - 1,
-      totalAlugueis:
-        Number(livro.totalAlugueis) + 1,
+      quantidade: Number(livro.quantidade) - 1,
+      totalAlugueis: Number(livro.totalAlugueis) + 1,
     });
 
     alert("Aluguel realizado.");
@@ -118,23 +120,15 @@ export default function Alugueis() {
 
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <div className="grid md:grid-cols-2 gap-4">
-
           <select
             value={clienteId}
-            onChange={(e) =>
-              setClienteId(e.target.value)
-            }
+            onChange={(e) => setClienteId(e.target.value)}
             className="border p-2 rounded"
           >
-            <option value="">
-              Selecione um cliente
-            </option>
+            <option value="">Selecione um cliente</option>
 
             {clients.map((client) => (
-              <option
-                key={client.id}
-                value={client.id}
-              >
+              <option key={client.id} value={client.id}>
                 {client.nome}
               </option>
             ))}
@@ -142,25 +136,17 @@ export default function Alugueis() {
 
           <select
             value={livroId}
-            onChange={(e) =>
-              setLivroId(e.target.value)
-            }
+            onChange={(e) => setLivroId(e.target.value)}
             className="border p-2 rounded"
           >
-            <option value="">
-              Selecione um livro
-            </option>
+            <option value="">Selecione um livro</option>
 
             {books.map((book) => (
-              <option
-                key={book.id}
-                value={book.id}
-              >
+              <option key={book.id} value={book.id}>
                 {book.nome}
               </option>
             ))}
           </select>
-
         </div>
 
         <button
@@ -181,27 +167,27 @@ export default function Alugueis() {
               {rental.livroNome}
             </h2>
 
-            <p>
-              Cliente: {rental.clienteNome}
-            </p>
-
-            <p>
-              Devolução: {rental.dataDevolucao}
-            </p>
-
-            <p>
-              Status: {rental.status}
-            </p>
+            <p>Cliente: {rental.clienteNome}</p>
+            <p>Devolução: {rental.dataDevolucao}</p>
+            <p>Status: {rental.status}</p>
+            <p>Renovações: {rental.renovacoes}</p>
 
             {rental.status === "ATIVO" && (
-              <button
-                onClick={() =>
-                  devolverLivro(rental)
-                }
-                className="bg-green-600 text-white px-3 py-1 rounded mt-3"
-              >
-                Devolver
-              </button>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => devolverLivro(rental)}
+                  className="bg-green-600 text-white px-3 py-1 rounded"
+                >
+                  Devolver
+                </button>
+
+                <button
+                  onClick={() => renovarLivro(rental)}
+                  className="bg-blue-600 text-white px-3 py-1 rounded"
+                >
+                  Renovar
+                </button>
+              </div>
             )}
           </div>
         ))}
