@@ -23,6 +23,16 @@ export function BookProvider({ children }) {
   }
 
   function updateBook(updatedBook) {
+  setBooks((prev) =>
+    prev.map((book) =>
+      book.id === updatedBook.id
+        ? updatedBook
+        : book
+    )
+  );
+}
+
+  function updateBook(updatedBook) {
     setBooks((prev) =>
       prev.map((book) =>
         book.id === updatedBook.id ? updatedBook : book
@@ -37,9 +47,10 @@ export function BookProvider({ children }) {
         addBook,
         removeBook,
         updateBook,
-      }}
+}}
     >
       {children}
     </BookContext.Provider>
   );
 }
+
