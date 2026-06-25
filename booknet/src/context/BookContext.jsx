@@ -17,10 +17,23 @@ export function BookProvider({ children }) {
   }
 
   function removeBook(id) {
-    setBooks((prev) =>
-      prev.filter((book) => book.id !== id)
-    );
+  const rentals = JSON.parse(localStorage.getItem("rentals")) || [];
+
+  const livroAlugado = rentals.some(
+    (rental) =>
+      rental.livroId === id &&
+      rental.status === "ATIVO"
+  );
+
+  if (livroAlugado) {
+    alert("Não é possível remover um livro que está alugado.");
+    return;
   }
+
+  setBooks((prev) =>
+    prev.filter((book) => book.id !== id)
+  );
+}
 
   function updateBook(updatedBook) {
   setBooks((prev) =>

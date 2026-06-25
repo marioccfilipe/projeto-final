@@ -28,30 +28,39 @@ export default function Livros() {
   }
 
   function handleSubmit(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    addBook({
-      id: crypto.randomUUID(),
-      ...formData,
-      totalVendas: 0,
-      totalAlugueis: 0,
-    });
+  const isbnExiste = books.some(
+    (book) => book.isbn === formData.isbn
+  );
 
-    setFormData({
-      isbn: "",
-      nome: "",
-      autor: "",
-      editora: "",
-      ano: "",
-      assunto: "",
-      tipo: "Venda",
-      origem: "Nacional",
-      quantidade: 1,
-      precoVenda: "",
-      precoAluguel: "",
-      precoRenovacao: "",
-    });
+  if (isbnExiste) {
+    alert("Já existe um livro cadastrado com esse ISBN.");
+    return;
   }
+
+  addBook({
+    id: crypto.randomUUID(),
+    ...formData,
+    totalVendas: 0,
+    totalAlugueis: 0,
+  });
+
+  setFormData({
+    isbn: "",
+    nome: "",
+    autor: "",
+    editora: "",
+    ano: "",
+    assunto: "",
+    tipo: "Venda",
+    origem: "Nacional",
+    quantidade: 1,
+    precoVenda: "",
+    precoAluguel: "",
+    precoRenovacao: "",
+  });
+}
 
   return (
     <div className="max-w-7xl mx-auto p-6">
